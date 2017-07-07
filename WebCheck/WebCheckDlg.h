@@ -3,6 +3,8 @@
 //
 
 #pragma once
+#include "WndWebList.h"
+
 
 
 // CWebCheckDlg 对话框
@@ -33,4 +35,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnCheck();
+
+	//变量定义
+private:
+	CWndWebList					m_wndWebList;					//检测窗口
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

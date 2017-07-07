@@ -190,6 +190,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WebCheck.h" />
     <ClInclude Include="WebCheckDlg.h" />
+    <ClInclude Include="WndWebList.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -200,6 +201,7 @@
     </ClCompile>
     <ClCompile Include="WebCheck.cpp" />
     <ClCompile Include="WebCheckDlg.cpp" />
+    <ClCompile Include="WndWebList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WebCheck.rc" />

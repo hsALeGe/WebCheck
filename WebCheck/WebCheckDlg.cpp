@@ -12,6 +12,9 @@
 #define new DEBUG_NEW
 #endif
 
+//控件标识
+#define IDC_WNDWEBLIST_CTRL				100
+
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -66,6 +69,8 @@ BEGIN_MESSAGE_MAP(CWebCheckDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_CHECK, &CWebCheckDlg::OnBnClickedBtnCheck)
+	ON_WM_CREATE()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -204,4 +209,29 @@ void CWebCheckDlg::OnBnClickedBtnCheck()
 	delete pHttpFile;
 	pHttpFile = NULL;
 
+}
+
+
+int CWebCheckDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+	m_wndWebList.Create(NULL, TEXT("窗口1"), WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL, CRect(0,0,0,0), this, IDC_WNDWEBLIST_CTRL);
+	m_wndWebList.ShowWindow(SW_SHOW);
+
+	return 0;
+}
+
+
+void CWebCheckDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+
+	// TODO: 在此处添加消息处理程序代码
+	if (m_wndWebList)
+	{
+	m_wndWebList.MoveWindow(CRect(10, 10, 440, 340));
+	}
 }

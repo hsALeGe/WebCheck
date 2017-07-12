@@ -15,6 +15,10 @@
 //控件标识
 #define IDC_WNDWEBLIST_CTRL				100
 
+//时间标识
+#define IDI_TIME_CHECK_WEB				300
+#define TIME_CHECK_WEB					5
+
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -55,6 +59,7 @@ END_MESSAGE_MAP()
 
 CWebCheckDlg::CWebCheckDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_WEBCHECK_DIALOG, pParent)
+	, m_uTimeElapse(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -62,6 +67,7 @@ CWebCheckDlg::CWebCheckDlg(CWnd* pParent /*=NULL*/)
 void CWebCheckDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_TIME, m_uTimeElapse);
 }
 
 BEGIN_MESSAGE_MAP(CWebCheckDlg, CDialogEx)
@@ -71,6 +77,11 @@ BEGIN_MESSAGE_MAP(CWebCheckDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CHECK, &CWebCheckDlg::OnBnClickedBtnCheck)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_BTN_ADD, &CWebCheckDlg::OnBnClickedBtnAdd)
+	ON_BN_CLICKED(IDC_BTN_DEL, &CWebCheckDlg::OnBnClickedBtnDel)
+	ON_WM_TIMER()
+//	ON_WM_LBUTTONDOWN()
+ON_BN_CLICKED(IDC_BTN_ABOUT, &CWebCheckDlg::OnBnClickedBtnAbout)
 END_MESSAGE_MAP()
 
 
@@ -106,8 +117,85 @@ BOOL CWebCheckDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-
+	LoadConfigFun();
+	m_webWnd.OnInsertUrlRecord();
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+void CWebCheckDlg::LoadConfigFun()
+{
+	CString strFileDlgPath;
+	TCHAR szModuleDirectory[MAX_PATH];	//模块目录
+	GetModuleFileName(AfxGetInstanceHandle(), szModuleDirectory, sizeof(szModuleDirectory));
+	int nModuleLen = lstrlen(szModuleDirectory);
+	int nProcessLen = lstrlen(AfxGetApp()->m_pszExeName) + lstrlen(TEXT(".EXE")) + 1;
+	if (nModuleLen <= nProcessLen)
+		return ;
+	szModuleDirectory[nModuleLen - nProcessLen] = 0;
+	strFileDlgPath = szModuleDirectory;
+	
+	strFileDlgPath += TEXT("\\url_record.xml");
+	ReadXmlConfig(strFileDlgPath);
+	m_webWnd.ShowWindow(SW_SHOW);
+
+}
+
+void CWebCheckDlg::ReadXmlConfig(CString strPath)
+{
+	//创建XML是否成功
+	::CoInitialize(NULL);
+	HRESULT HR = m_xmlDoc.CreateInstance(__uuidof(MSXML2::DOMDocument60));
+	if (!SUCCEEDED(HR))
+	{
+		ASSERT(false);
+		return;
+	}
+
+	//加载xml
+	if (!m_xmlDoc->load(strPath.GetBuffer()))
+	{
+		//ASSERT(false);
+		return;
+	}
+
+	MSXML2::IXMLDOMElementPtr xmlRoot;
+	MSXML2::IXMLDOMNodeListPtr xmlNodes;//某个节点的所有子节点
+	MSXML2::IXMLDOMNamedNodeMapPtr xmlNodeAtts;//某个节点的所有属性
+	MSXML2::IXMLDOMNodePtr	  xmlNode;//某子节点	
+	
+	xmlRoot = m_xmlDoc->GetdocumentElement();		//获取根节点
+	//获取所有根节点的子节点
+	xmlRoot->get_childNodes(&xmlNodes);
+
+	LONG xmlNodeNum = 0, attsNum = 0;
+	//子节点的数量
+	xmlNodes->get_length(&xmlNodeNum);
+
+	//节点信息
+	for (size_t i = 0; i < xmlNodeNum; i++)
+	{
+		//获得某个子节点
+		xmlNodes->get_item(i, &xmlNode);
+		//获得某个节点的所有属性
+		xmlNode->get_attributes(&xmlNodeAtts);
+		//获得所有属性的个数
+		xmlNodeAtts->get_length(&attsNum);
+
+		for (size_t j = 0; j < attsNum; j++)
+		{
+			//获得某个属性
+			xmlNodeAtts->get_item(j, &xmlNode);
+			CString str1 = xmlNode->nodeName;
+			CString str2 = xmlNode->text;
+			m_webWnd.m_strUrlRecord.insert(std::make_pair(j, str2));
+		}
+	}
+
+	m_xmlDoc->save(TEXT("url_record.xml"));
+	xmlNodes->Release();
+	xmlNode->Release();
+	xmlRoot->Release();
+	m_xmlDoc.Release();
 }
 
 void CWebCheckDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -164,7 +252,138 @@ HCURSOR CWebCheckDlg::OnQueryDragIcon()
 void CWebCheckDlg::OnBnClickedBtnCheck()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	CString strUrl = TEXT("http://baidu.com");
+	UpdateData(TRUE);
+
+	int index = 0;
+	std::map<WORD, CWndWebList*>::iterator itr = m_webWnd.m_webListMap.begin();
+	for (; itr != m_webWnd.m_webListMap.end();)
+	{
+		itr->second->UpdateData(TRUE);
+		CEdit *edit = (CEdit*)itr->second->GetDlgItem(IDC_EDIT_URL_INDEX + itr->second->GetIndex());
+		CString str=TEXT("");
+		edit->GetWindowText(str);
+		str.TrimLeft();
+		str.TrimRight();
+
+		if (str.IsEmpty())
+		{
+			++index;
+		}
+		else
+		{
+			itr->second->SetCheckWebValue(OnCheckWebStatus(str));
+		}
+		++itr;
+	}
+
+	if (index == m_webWnd.m_webListMap.size())
+	{
+		MessageBox(TEXT("请输入有效的连接！"));
+		return;
+	}
+
+	//单位秒
+	if (m_uTimeElapse < 60) m_uTimeElapse = TIME_CHECK_WEB * 60;
+	SetTimer(IDI_TIME_CHECK_WEB, m_uTimeElapse * 1000, NULL);
+
+}
+
+
+int CWebCheckDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+	m_webWnd.Create(NULL, TEXT("WndWebList"), WS_VISIBLE | WS_CHILD | WS_VSCROLL, CRect(0,0,0,0), this, IDC_WNDWEBLIST_CTRL);
+
+	return 0;
+}
+
+
+void CWebCheckDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+
+	// TODO: 在此处添加消息处理程序代码
+	if (m_webWnd)
+	{
+		m_webWnd.MoveWindow(CRect(10, 18, 560, 300));
+	}
+}
+
+
+void CWebCheckDlg::OnBnClickedBtnAdd()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	m_webWnd.OnAddUrlRecord(TEXT(""));
+
+	std::map<WORD, CWndWebList*>::iterator itr = m_webWnd.m_webListMap.begin();
+	for (; itr != m_webWnd.m_webListMap.end(); )
+	{
+		CEdit *edit = (CEdit*)itr->second->GetDlgItem(IDC_EDIT_URL_INDEX + itr->second->GetIndex());
+		edit->SetLimitText(256);
+		++itr;
+	}
+}
+
+
+void CWebCheckDlg::OnBnClickedBtnDel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	std::map<WORD, CWndWebList*>::iterator itr = m_webWnd.m_webListMap.begin();
+	if (itr == m_webWnd.m_webListMap.end()) KillTimer(IDI_TIME_CHECK_WEB);
+	for (; itr != m_webWnd.m_webListMap.end(); )
+	{
+		CButton *bt = (CButton*)itr->second->GetDlgItem(IDC_CHECKBOX_INDEX + itr->second->GetIndex());
+		if(1 == bt->GetCheck())
+		{	
+			itr->second->OnDestroyWebListWnd();
+			delete itr->second;
+			itr->second = 0;
+			m_webWnd.m_webListMap.erase(itr++);
+		}
+		else {
+			itr++;
+		}
+	}
+	Invalidate();
+
+	m_webWnd.OnMoveWebListCtrl();
+
+}
+
+
+void CWebCheckDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	switch (nIDEvent)
+	{
+	case IDI_TIME_CHECK_WEB:
+	{
+		std::map<WORD, CWndWebList*>::iterator itr = m_webWnd.m_webListMap.begin();
+		for (; itr != m_webWnd.m_webListMap.end() ;)
+		{
+			CEdit *edit = (CEdit*)itr->second->GetDlgItem(IDC_EDIT_URL_INDEX + itr->second->GetIndex());
+			CString str = TEXT("");
+			edit->GetWindowText(str);
+			str.TrimLeft();
+			str.TrimRight();
+			if (!str.IsEmpty()) 
+			itr->second->SetCheckWebValue(OnCheckWebStatus(str));
+			++itr;
+		}
+	}
+		break;
+	default:
+		break;
+	}
+
+	CDialogEx::OnTimer(nIDEvent);
+}
+
+DWORD CWebCheckDlg::OnCheckWebStatus(CString strUrl)
+{
 
 	CInternetSession sess;
 
@@ -174,7 +393,7 @@ void CWebCheckDlg::OnBnClickedBtnCheck()
 	try
 	{
 		pHttpFile = (CHttpFile*)sess.OpenURL(strUrl);
-		
+
 		pHttpFile->QueryInfoStatusCode(dwStatusCode);
 	}
 	catch (CInternetException * m_pException)
@@ -188,50 +407,43 @@ void CWebCheckDlg::OnBnClickedBtnCheck()
 	TCHAR *pszMsg;
 	if (pHttpFile)
 	{
-		while (pHttpFile->ReadString(strLine)!=NULL)
+		while (pHttpFile->ReadString(strLine) != NULL)
 		{
 			strHtml += strLine;
 		}
 
 		if (strHtml)
 		{
-			int len =MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, NULL, 0);
+			int len = MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, NULL, 0);
 			pszMsg = new TCHAR[len];
 			MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, pszMsg, len);
 		}
 
 	}
 	else {
-		return;
+		return 0;
 	}
+	DWORD dwStatus = 0;
+	pHttpFile->QueryInfoStatusCode(dwStatus);
 	sess.Close();
 	pHttpFile->Close();
 	delete pHttpFile;
 	pHttpFile = NULL;
 
+	return dwStatus;
+}
+
+BOOL CWebCheckDlg::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	// TODO: 在此添加专用代码和/或调用基类
+
+	return CDialogEx::OnCommand(wParam, lParam);
 }
 
 
-int CWebCheckDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+void CWebCheckDlg::OnBnClickedBtnAbout()
 {
-	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
-		return -1;
-
-	// TODO:  在此添加您专用的创建代码
-	m_wndWebList.Create(NULL, TEXT("窗口1"), WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL, CRect(0,0,0,0), this, IDC_WNDWEBLIST_CTRL);
-	m_wndWebList.ShowWindow(SW_SHOW);
-
-	return 0;
-}
-
-
-void CWebCheckDlg::OnSize(UINT nType, int cx, int cy)
-{
-	CDialogEx::OnSize(nType, cx, cy);
-
-	// TODO: 在此处添加消息处理程序代码
-	if (m_wndWebList)
-	{
-	m_wndWebList.MoveWindow(CRect(10, 10, 440, 340));
-	}
+	// TODO: 在此添加控件通知处理程序代码
+	CAboutDlg dlg;
+	dlg.DoModal();
 }

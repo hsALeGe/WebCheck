@@ -36,6 +36,9 @@
     <ClInclude Include="WndWebList.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="WebWnd.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WebCheck.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="WndWebList.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WebWnd.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

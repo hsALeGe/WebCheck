@@ -3,9 +3,9 @@
 //
 
 #pragma once
-#include "WndWebList.h"
-
-
+#include "WebWnd.h"
+#import "msxml6.dll"
+using namespace MSXML2;
 
 // CWebCheckDlg 对话框
 class CWebCheckDlg : public CDialogEx
@@ -38,8 +38,25 @@ public:
 
 	//变量定义
 private:
-	CWndWebList					m_wndWebList;					//检测窗口
+	CWebWnd						m_webWnd;					//检测窗口
+	MSXML2::IXMLDOMDocumentPtr	m_xmlDoc;						
+	MSXML2::IXMLDOMElementPtr	m_xmlUrl;
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnBnClickedBtnAdd();
+
+private:
+	void LoadConfigFun();
+	void ReadXmlConfig(CString strPath);
+	DWORD OnCheckWebStatus(CString strUrl);
+
+public:
+	afx_msg void OnBnClickedBtnDel();
+private:
+	UINT m_uTimeElapse;
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnBnClickedBtnAbout();
 };

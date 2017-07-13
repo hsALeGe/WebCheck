@@ -292,6 +292,7 @@ void CWebCheckDlg::OnBnClickedBtnCheck()
 
 	//µ•Œª√Î
 	if (m_uTimeElapse < 60) m_uTimeElapse = TIME_CHECK_WEB * 60;
+	KillTimer(IDI_TIME_CHECK_WEB);
 	SetTimer(IDI_TIME_CHECK_WEB, m_uTimeElapse * 1000, NULL);
 
 }
@@ -423,9 +424,10 @@ void CWebCheckDlg::OnCheckWebStatus(LPVOID lparam)
 					m_csUrlSection.Lock();
 					index = m_urlIndexDeque.front();
 					m_urlIndexDeque.pop_front();
+					m_csUrlSection.Unlock();
+
 					CString str = CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->GetUrlString();
 					pHttpFile = (CHttpFile*)sess.OpenURL(str);
-					m_csUrlSection.Unlock();
 
 					pHttpFile->QueryInfoStatusCode(dwStatusCode);
 				}
@@ -433,10 +435,11 @@ void CWebCheckDlg::OnCheckWebStatus(LPVOID lparam)
 			}
 			catch (CInternetException * m_pException)
 			{
+				delete pHttpFile;
 				pHttpFile = NULL;
+				CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->SetCheckWebValue(0);
 				m_pException->m_dwError;
 				m_pException->Delete();
-				sess.Close();
 			}
 			CString strLine;
 			TCHAR *pszMsg;

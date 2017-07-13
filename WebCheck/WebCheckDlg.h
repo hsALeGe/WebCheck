@@ -4,6 +4,7 @@
 
 #pragma once
 #include "WebWnd.h"
+#include <deque>
 #import "msxml6.dll"
 using namespace MSXML2;
 
@@ -41,15 +42,25 @@ private:
 	CWebWnd						m_webWnd;					//¼ì²â´°¿Ú
 	MSXML2::IXMLDOMDocumentPtr	m_xmlDoc;						
 	MSXML2::IXMLDOMElementPtr	m_xmlUrl;
+	HANDLE						m_checkThread;
+
+public:
+	static CCriticalSection		m_csUrlSection;					//url
+	static std::deque<WORD>		m_urlIndexDeque;			
+
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnBnClickedBtnAdd();
 
+public:
+	static CWebCheckDlg * _instance;
+	static CWebCheckDlg* GetInstance();
+
 private:
 	void LoadConfigFun();
 	void ReadXmlConfig(CString strPath);
-	DWORD OnCheckWebStatus(CString strUrl);
+	static void OnCheckWebStatus(LPVOID lparam);
 
 public:
 	afx_msg void OnBnClickedBtnDel();

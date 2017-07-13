@@ -46,6 +46,7 @@ public:
 	CButton* GetCheckBox() { return m_btnCheckBox; }
 	WORD	 GetIndex() { return m_wIndex; }
 	void OnDestroyWebListWnd();
+	CString GetUrlString() { return m_strUrl; }
 
 	virtual void DoDataExchange(CDataExchange* pDX);
 

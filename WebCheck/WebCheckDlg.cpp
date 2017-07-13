@@ -19,6 +19,10 @@
 #define IDI_TIME_CHECK_WEB				300
 #define TIME_CHECK_WEB					5
 
+CCriticalSection CWebCheckDlg::m_csUrlSection;
+std::deque<WORD> CWebCheckDlg::m_urlIndexDeque;
+CWebCheckDlg* CWebCheckDlg::_instance = NULL;
+
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -62,6 +66,7 @@ CWebCheckDlg::CWebCheckDlg(CWnd* pParent /*=NULL*/)
 	, m_uTimeElapse(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	if (_instance == NULL) _instance = this;
 }
 
 void CWebCheckDlg::DoDataExchange(CDataExchange* pDX)
@@ -119,6 +124,7 @@ BOOL CWebCheckDlg::OnInitDialog()
 	// TODO: 在此添加额外的初始化代码
 	LoadConfigFun();
 	m_webWnd.OnInsertUrlRecord();
+	m_checkThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)OnCheckWebStatus, NULL, 0, 0);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -271,7 +277,9 @@ void CWebCheckDlg::OnBnClickedBtnCheck()
 		}
 		else
 		{
-			itr->second->SetCheckWebValue(OnCheckWebStatus(str));
+			m_csUrlSection.Lock();
+			m_urlIndexDeque.push_back(itr->second->GetIndex());
+			m_csUrlSection.Unlock();
 		}
 		++itr;
 	}
@@ -327,6 +335,15 @@ void CWebCheckDlg::OnBnClickedBtnAdd()
 	}
 }
 
+CWebCheckDlg *CWebCheckDlg::GetInstance()
+{
+	if (NULL == _instance)
+	{
+		_instance = new CWebCheckDlg();
+	}
+	
+	return _instance;
+}
 
 void CWebCheckDlg::OnBnClickedBtnDel()
 {
@@ -369,8 +386,12 @@ void CWebCheckDlg::OnTimer(UINT_PTR nIDEvent)
 			edit->GetWindowText(str);
 			str.TrimLeft();
 			str.TrimRight();
-			if (!str.IsEmpty()) 
-			itr->second->SetCheckWebValue(OnCheckWebStatus(str));
+			if (!str.IsEmpty())
+			{
+				m_csUrlSection.Lock();
+				m_urlIndexDeque.push_back(itr->second->GetIndex());
+				m_csUrlSection.Unlock();
+			}
 			++itr;
 		}
 	}
@@ -382,55 +403,87 @@ void CWebCheckDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialogEx::OnTimer(nIDEvent);
 }
 
-DWORD CWebCheckDlg::OnCheckWebStatus(CString strUrl)
+void CWebCheckDlg::OnCheckWebStatus(LPVOID lparam)
 {
 
 	CInternetSession sess;
-
+	int index = -1;
+	WORD c = 0;
 	CHttpFile *pHttpFile = NULL;
 	CString strHtml = TEXT("");
 	DWORD dwStatusCode;
-	try
+	while (true)
 	{
-		pHttpFile = (CHttpFile*)sess.OpenURL(strUrl);
-
-		pHttpFile->QueryInfoStatusCode(dwStatusCode);
-	}
-	catch (CInternetException * m_pException)
-	{
-		pHttpFile = NULL;
-		m_pException->m_dwError;
-		m_pException->Delete();
-		sess.Close();
-	}
-	CString strLine;
-	TCHAR *pszMsg;
-	if (pHttpFile)
-	{
-		while (pHttpFile->ReadString(strLine) != NULL)
+		try
 		{
-			strHtml += strLine;
-		}
+			try
+			{
+				if (!m_urlIndexDeque.empty())
+				{
+					m_csUrlSection.Lock();
+					index = m_urlIndexDeque.front();
+					m_urlIndexDeque.pop_front();
+					CString str = CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->GetUrlString();
+					pHttpFile = (CHttpFile*)sess.OpenURL(str);
+					m_csUrlSection.Unlock();
 
-		if (strHtml)
+					pHttpFile->QueryInfoStatusCode(dwStatusCode);
+				}
+
+			}
+			catch (CInternetException * m_pException)
+			{
+				pHttpFile = NULL;
+				m_pException->m_dwError;
+				m_pException->Delete();
+				sess.Close();
+			}
+			CString strLine;
+			TCHAR *pszMsg;
+			if (pHttpFile)
+			{
+				while (pHttpFile->ReadString(strLine) != NULL)
+				{
+					strHtml += strLine;
+				}
+
+				if (strHtml)
+				{
+					int len = MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, NULL, 0);
+					pszMsg = new TCHAR[len];
+					MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, pszMsg, len);
+				}
+
+			}
+			else {
+				if (index != -1)
+				{
+					CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->SetCheckWebValue(0);
+					index = -1;
+				}
+				continue;
+			}
+			DWORD dwStatus = 0;
+			pHttpFile->QueryInfoStatusCode(dwStatus);
+	
+			delete pHttpFile;
+			pHttpFile = NULL;
+
+
+
+			if (index != -1)
+			{
+				CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->SetCheckWebValue(dwStatus);
+				index = -1;
+			}
+		}
+		catch (const std::exception&)
 		{
-			int len = MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, NULL, 0);
-			pszMsg = new TCHAR[len];
-			MultiByteToWideChar(CP_UTF8, 0, (char*)strHtml.GetBuffer(), -1, pszMsg, len);
-		}
 
+		}
 	}
-	else {
-		return 0;
-	}
-	DWORD dwStatus = 0;
-	pHttpFile->QueryInfoStatusCode(dwStatus);
 	sess.Close();
 	pHttpFile->Close();
-	delete pHttpFile;
-	pHttpFile = NULL;
-
-	return dwStatus;
 }
 
 BOOL CWebCheckDlg::OnCommand(WPARAM wParam, LPARAM lParam)

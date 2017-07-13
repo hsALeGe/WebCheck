@@ -158,46 +158,88 @@ void CWndWebList::SetCheckWebValue(DWORD dwStatus)
 		m_strDescribe.Format(TEXT("正常"));
 		break;
 	case 400:
+	{
 		m_strDescribe.Format(TEXT("错误请求，请手动打开网址查看是否正常！"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 403:
+	{
 		m_strDescribe.Format(TEXT("服务器拒绝你的请求"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 404:
+	{
 		m_strDescribe.Format(TEXT("服务器找不到请求的网页"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 408:
+	{
 		m_strDescribe.Format(TEXT("服务器等候请求超时，请手动打开连接查看是否正常"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 409:
+	{
 		m_strDescribe.Format(TEXT("服务器在完成请求时发生冲突"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 410:
+	{
 		m_strDescribe.Format(TEXT("请求的资源已永久删除"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 500:
+	{
 		m_strDescribe.Format(TEXT(" 服务器遇到错误，无法完成请求"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 501:
+	{
 		m_strDescribe.Format(TEXT(" 服务器不具备完成请求的功能"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 502:
+	{
 		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，从上游服务器收到无效响应"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 503:
+	{
 		m_strDescribe.Format(TEXT(" 服务器目前无法使用"));
-		break;
+		MessageBox(m_strDescribe);
+	}
+	break;
 	case 504:
+	{
 		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，但是没有及时从上游服务器收到请求"));
+		MessageBox(m_strDescribe);
+	}
 		break;
 	case 505:
+	{
 		m_strDescribe.Format(TEXT("服务器不支持请求中所用的 HTTP 协议版本"));
+		MessageBox(m_strDescribe);
+
+	}
 		break;
 	default:
+	{
 		m_strDescribe.Format(TEXT("发生未知错误，请手动打开网址。"));
-		break;
+		MessageBox(m_strDescribe);
+	}	break;
 	}
-	UpdateData(FALSE);
+	m_editDes->SetWindowText(m_strDescribe);
+	CString str;
+	str.Format(TEXT("%ld"), dwStatus);
+	m_editStatus->SetWindowText(str);
 }
 
 //void CWndWebList::OnLButtonDown(UINT nFlags, CPoint point)

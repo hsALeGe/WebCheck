@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WebCheck", "WebCheck\WebCheck.vcxproj", "{4E911C0F-D53E-4D27-AC15-A402A83533C5}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -21,6 +24,7 @@ Global
 		{4E911C0F-D53E-4D27-AC15-A402A83533C5}.Release|x64.Build.0 = Release|x64
 		{4E911C0F-D53E-4D27-AC15-A402A83533C5}.Release|x86.ActiveCfg = Release|Win32
 		{4E911C0F-D53E-4D27-AC15-A402A83533C5}.Release|x86.Build.0 = Release|Win32
+		{4E911C0F-D53E-4D27-AC15-A402A83533C5}.Release|x86.Deploy.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

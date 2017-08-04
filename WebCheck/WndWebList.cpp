@@ -152,7 +152,8 @@ void CWndWebList::SetCheckWebValue(DWORD dwStatus)
 	switch (dwStatus)
 	{
 	case 0:
-		m_strDescribe.Format(TEXT("请检查输入的网址是否有误"));
+		m_strDescribe.Format(TEXT("请检查输入的网址是否有误,或者打开查看是否异常"));
+		MessageBox(m_strDescribe);
 		break;
 	case 200:
 		m_strDescribe.Format(TEXT("正常"));
@@ -165,13 +166,13 @@ void CWndWebList::SetCheckWebValue(DWORD dwStatus)
 		break;
 	case 403:
 	{
-		m_strDescribe.Format(TEXT("服务器拒绝你的请求"));
+		m_strDescribe.Format(TEXT("服务器拒绝你的请求，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
 	case 404:
 	{
-		m_strDescribe.Format(TEXT("服务器找不到请求的网页"));
+		m_strDescribe.Format(TEXT("服务器找不到请求的网页，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
@@ -183,25 +184,25 @@ void CWndWebList::SetCheckWebValue(DWORD dwStatus)
 		break;
 	case 409:
 	{
-		m_strDescribe.Format(TEXT("服务器在完成请求时发生冲突"));
+		m_strDescribe.Format(TEXT("服务器在完成请求时发生冲突，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
 	case 410:
 	{
-		m_strDescribe.Format(TEXT("请求的资源已永久删除"));
+		m_strDescribe.Format(TEXT("请求的资源已永久删除，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
 	case 500:
 	{
-		m_strDescribe.Format(TEXT(" 服务器遇到错误，无法完成请求"));
+		m_strDescribe.Format(TEXT(" 服务器遇到错误，无法完成请求，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
 	case 501:
 	{
-		m_strDescribe.Format(TEXT(" 服务器不具备完成请求的功能"));
+		m_strDescribe.Format(TEXT(" 服务器不具备完成请求的功能，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 		break;
@@ -213,7 +214,7 @@ void CWndWebList::SetCheckWebValue(DWORD dwStatus)
 		break;
 	case 503:
 	{
-		m_strDescribe.Format(TEXT(" 服务器目前无法使用"));
+		m_strDescribe.Format(TEXT(" 服务器目前无法使用，打开查看是否异常"));
 		MessageBox(m_strDescribe);
 	}
 	break;

@@ -408,6 +408,13 @@ void CWebCheckDlg::OnCheckWebStatus(LPVOID lparam)
 {
 
 	CInternetSession sess;
+	sess.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 4000);
+	sess.SetOption(INTERNET_OPTION_SEND_TIMEOUT, 1000);
+	sess.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT,6000);
+	sess.SetOption(INTERNET_OPTION_DATA_SEND_TIMEOUT,1000);
+	sess.SetOption(INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,7000);
+	sess.SetOption(INTERNET_OPTION_CONNECT_RETRIES,2);
+
 	int index = -1;
 	WORD c = 0;
 	CHttpFile *pHttpFile = NULL;
@@ -425,7 +432,6 @@ void CWebCheckDlg::OnCheckWebStatus(LPVOID lparam)
 					index = m_urlIndexDeque.front();
 					m_urlIndexDeque.pop_front();
 					m_csUrlSection.Unlock();
-
 					CString str = CWebCheckDlg::GetInstance()->m_webWnd.m_webListMap[index]->GetUrlString();
 					pHttpFile = (CHttpFile*)sess.OpenURL(str);
 

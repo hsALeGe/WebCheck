@@ -69,6 +69,17 @@ BOOL CWebCheckApp::InitInstance()
 	// TODO: 应适当修改该字符串，
 	// 例如修改为公司或组织名
 	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+	HANDLE hMutex;
+	hMutex = CreateMutex(NULL, TRUE, TEXT("WEBCHECK"));
+	if (hMutex)
+	{
+		if (ERROR_ALREADY_EXISTS == GetLastError())
+		{
+			return false;
+		}
+	}
+	ReleaseMutex(hMutex);
+	ReleaseMutex(hMutex);
 
 	CWebCheckDlg dlg;
 	m_pMainWnd = &dlg;

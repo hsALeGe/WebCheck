@@ -50,7 +50,7 @@ public:
 
 	virtual void DoDataExchange(CDataExchange* pDX);
 
-	void SetCheckWebValue(DWORD dwStatus);
+	void SetCheckWebValue(DWORD dwStatus,CString strMsg=TEXT(""),DWORD dwErrorCode=0);
 //	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 };

@@ -61,11 +61,13 @@ private:
 	void LoadConfigFun();
 	void ReadXmlConfig(CString strPath);
 	static void OnCheckWebStatus(LPVOID lparam);
+	void LoadErrorDesc();
 
 public:
 	afx_msg void OnBnClickedBtnDel();
 private:
 	UINT m_uTimeElapse;
+	static std::map<WORD, CString> m_mapErrorDes;
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);

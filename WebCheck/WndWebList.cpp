@@ -111,7 +111,8 @@ void CWndWebList::OnCreateWebCtrl()
 	m_editStatus->SetReadOnly(TRUE);
 
 	m_editDes = new CEdit();
-	m_editDes->Create(WS_CHILD | WS_VISIBLE , CRect(CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + 16, 0, CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + EDIT_WIDTH + 26, CHECK_BOX_HEIGHT), this, IDC_EDIT_DESI_INDEX + m_wIndex);
+	m_editDes->Create(WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL| WS_MAXIMIZEBOX, CRect(CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + 16, 0, CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + EDIT_WIDTH + 26, CHECK_BOX_HEIGHT), this, IDC_EDIT_DESI_INDEX + m_wIndex);
+	m_editDes->MoveWindow(CRect(CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + 16, 0, CHECK_BOX_WIDTH + EDIT_WIDTH + BTN_WIDTH * 2 + EDIT_WIDTH + 26, CHECK_BOX_HEIGHT));
 	m_editDes->SetReadOnly(TRUE);
 
 }
@@ -146,97 +147,86 @@ void CWndWebList::DoDataExchange(CDataExchange* pDX)
 
 }
 
-void CWndWebList::SetCheckWebValue(DWORD dwStatus)
+void CWndWebList::SetCheckWebValue(DWORD dwStatus, CString strMsg,DWORD dwErrorCode)
 {
 	m_strStatus.Format(TEXT("%ld"), dwStatus);
 	switch (dwStatus)
 	{
 	case 0:
-		m_strDescribe.Format(TEXT("请检查输入的网址是否有误,或者打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		if (dwErrorCode==0)
+			m_strDescribe.Format(TEXT("请检查输入的网址是否有误,或者打开查看是否异常"));
+		else
+			m_strDescribe.Format(TEXT("ErrCode=%ld,%s"), dwErrorCode, strMsg);
 		break;
 	case 200:
 		m_strDescribe.Format(TEXT("正常"));
 		break;
 	case 400:
 	{
-		m_strDescribe.Format(TEXT("错误请求，请手动打开网址查看是否正常！"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("错误请求，请手动打开网址查看是否正常！,http狀態為400"));
 	}
 		break;
 	case 403:
 	{
-		m_strDescribe.Format(TEXT("服务器拒绝你的请求，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("服务器拒绝你的请求，打开查看是否异常！！,http狀態為403"));
 	}
 		break;
 	case 404:
 	{
-		m_strDescribe.Format(TEXT("服务器找不到请求的网页，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("服务器找不到请求的网页，打开查看是否异常！！,http狀態為404"));
 	}
 		break;
 	case 408:
 	{
-		m_strDescribe.Format(TEXT("服务器等候请求超时，请手动打开连接查看是否正常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("服务器等候请求超时，请手动打开连接查看是否正常！！,http狀態為408"));
 	}
 		break;
 	case 409:
 	{
-		m_strDescribe.Format(TEXT("服务器在完成请求时发生冲突，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("服务器在完成请求时发生冲突，打开查看是否异常！,http狀態為409"));
 	}
 		break;
 	case 410:
 	{
-		m_strDescribe.Format(TEXT("请求的资源已永久删除，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("请求的资源已永久删除，打开查看是否异常！！,http狀態為410"));
 	}
 		break;
 	case 500:
 	{
-		m_strDescribe.Format(TEXT(" 服务器遇到错误，无法完成请求，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT(" 服务器遇到错误，无法完成请求，打开查看是否异常！,http狀態為500"));
 	}
 		break;
 	case 501:
 	{
-		m_strDescribe.Format(TEXT(" 服务器不具备完成请求的功能，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT(" 服务器不具备完成请求的功能，打开查看是否异常！,http狀態為501"));
 	}
 		break;
 	case 502:
 	{
-		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，从上游服务器收到无效响应"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，从上游服务器收到无效响应！！,http狀態為502"));
 	}
 		break;
 	case 503:
 	{
-		m_strDescribe.Format(TEXT(" 服务器目前无法使用，打开查看是否异常"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT(" 服务器目前无法使用，打开查看是否异常！,http狀態為503"));
 	}
 	break;
 	case 504:
 	{
-		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，但是没有及时从上游服务器收到请求"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT(" 服务器作为网关或代理，但是没有及时从上游服务器收到请求！,http狀態為504"));
 	}
 		break;
 	case 505:
 	{
-		m_strDescribe.Format(TEXT("服务器不支持请求中所用的 HTTP 协议版本"));
-		MessageBox(m_strDescribe);
+		m_strDescribe.Format(TEXT("服务器不支持请求中所用的 HTTP 协议版本！,http狀態為505"));
 
 	}
-		break;
 	default:
 	{
 		m_strDescribe.Format(TEXT("发生未知错误，请手动打开网址。"));
-		MessageBox(m_strDescribe);
 	}	break;
 	}
+	MessageBox(m_strDescribe);
 	m_editDes->SetWindowText(m_strDescribe);
 	CString str;
 	str.Format(TEXT("%ld"), dwStatus);
